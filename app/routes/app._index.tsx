@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Card, Layout, Link, Page, Text } from "@shopify/polaris";
+import { useNavigate } from "react-router";
 
 const steps = [
   {
@@ -9,15 +10,15 @@ const steps = [
   },
   {
     icon: "🎯",
-    title: "Add app block",
+    title: "Add to product page block",
     description:
-      "Open your Shopify theme editor, click Add block, choose Surprise Discount, and place it on the page where you want customers to see the offer.",
+      "Open your Shopify theme editor, click Add block, choose Surprise Discount, and place it in a product page section so it appears where customers view the product.",
   },
   {
     icon: "🛍️",
-    title: "Preview on storefront",
+    title: "Preview on product page",
     description:
-      "Visit the product or collection page where the block is placed, test the reveal flow, and confirm the message appears correctly.",
+      "Visit a product page where the block is placed, test the reveal flow, and confirm the message appears correctly.",
   },
   {
     icon: "📈",
@@ -28,6 +29,8 @@ const steps = [
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   return (
     <Page title="Dashboard" subtitle="Welcome to your Surprise Discount app dashboard.">
       <Layout>
@@ -110,7 +113,7 @@ export default function HomePage() {
                 <li>Monitor redemptions and offer performance in Analytics.</li>
               </ul>
               <div style={{ marginTop: "1.25rem" }}>
-                <Link url="/app/analytics" monochrome>Open analytics</Link>
+                <Link onClick={() => navigate("/app/analytics")} monochrome>Open analytics</Link>
               </div>
             </Box>
           </Card>

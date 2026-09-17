@@ -3,7 +3,10 @@
 {% assign preview_mode = request.design_mode %}
 {% assign offer_ready = settings.offerReady | default: false %}
 {% assign discount_value = settings.discountValue | default: '15' | strip %}
-{% assign show_block = true %}
+{% assign show_block = false %}
+{% if request.page_type == 'product' %}
+  {% assign show_block = true %}
+{% endif %}
 {% if settings.appliesTo == 'products' %}
   {% assign show_block = false %}
   {% for selected_product_id in settings.productIds %}
@@ -30,7 +33,8 @@
 {% else %}
   {% assign reward_text = 'You get ' | append: discount_value | append: ' off this product' %}
 {% endif %}
-{% if preview_mode or offer_ready and show_block %}
+{% if request.page_type == 'product' %}
+  {% if preview_mode or offer_ready and show_block %}
 <div id="{{ block_id }}" class="surprise-discount" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px;">
   <div class="surprise-discount__content">
     <p class="surprise-discount__message">{{ settings.message | default: 'A little surprise is waiting for you' }}</p>
@@ -244,6 +248,7 @@
     }
   })();
 </script>
+  {% endif %}
 {% endif %}
 
 {% schema %}

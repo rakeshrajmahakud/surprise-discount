@@ -116,13 +116,15 @@ export async function analyticsOverview(shop: string, days = 30) {
   }
   // Pre-aggregated data is used once the webhook has populated it. The raw-data
   // fallback keeps analytics useful for records created before this migration.
-  const stats = dailyStats.length ? dailyStats : redemptions.map((redemption) => ({
-    offerId: redemption.offerId,
-    date: redemption.createdAt,
-    redemptionCount: 1,
-    discountAmount: redemption.discountAmount,
-    orderValue: redemption.orderValue,
-  }));
+  const stats = dailyStats.length
+    ? dailyStats
+    : redemptions.map((redemption) => ({
+        offerId: redemption.offerId,
+        date: redemption.createdAt,
+        redemptionCount: 1,
+        discountAmount: Number(redemption.discountAmount ?? 0),
+        orderValue: Number(redemption.orderValue ?? 0),
+      }));
   for (const stat of stats) {
     const day = stat.date.toISOString().slice(0, 10);
     byDay.set(day, (byDay.get(day) ?? 0) + stat.redemptionCount);
