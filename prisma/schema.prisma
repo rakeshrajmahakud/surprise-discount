@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model Offer {
+  id                    String       @id @default(cuid())
+  shop                  String
+  name                  String
+  discountType          String
+  discountMethod        String       @default("coupon")
+  discountValue         Float
+  appliesTo             String
+  // SQLite does not support scalar lists. Values are JSON-encoded string arrays.
+  // Change these to String[] when moving this app to PostgreSQL/MySQL.
+  productIds            String       @default("[]")
+  collectionIds         String       @default("[]")
+  startDate             DateTime
+  endDate               DateTime
+  totalUsageLimit       Int?
+  combinesWithOther     Boolean      @default(false)
+  status                String
+  shopifyPriceRuleId    String?
+  shopifyDiscountCodeId String?
+  createdAt             DateTime     @default(now())
+  redemptions           Redemption[]
+
+  @@index([shop, status])
+}
+
+model Redemption {
+  id             String   @id @default(cuid())
+  offerId        String
+  offer          Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  orderId        String
+  discountAmount Float
+  orderValue     Float
+  createdAt      DateTime @default(now())
+
+  @@unique([offerId, orderId])
+  @@index([createdAt])
+}
+
+// Incrementally maintained when redemption records are imported. This keeps the
+// dashboard fast as redemption history grows.
+model DailyStat {
+  id              String   @id @default(cuid())
+  shop            String
+  offerId         String
+  date            DateTime
+  redemptionCount Int      @default(0)
+  discountAmount  Float    @default(0)
+  orderValue      Float    @default(0)
+
+  @@unique([shop, offerId, date])
+  @@index([shop, date])
+}

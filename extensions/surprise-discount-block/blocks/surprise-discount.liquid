@@ -1,0 +1,254 @@
+{% assign block_id = 'surprise-discount-' | append: block.id %}
+{% assign settings = shop.metafields["$app"].surprise_discount_settings.value %}
+{% assign preview_mode = request.design_mode %}
+{% assign offer_ready = settings.offerReady | default: false %}
+{% assign discount_value = settings.discountValue | default: '15' | strip %}
+{% assign show_block = true %}
+{% if settings.appliesTo == 'products' %}
+  {% assign show_block = false %}
+  {% for selected_product_id in settings.productIds %}
+    {% assign current_product_id = product.id | append: '' %}
+    {% assign selected_product_id_string = selected_product_id | append: '' %}
+    {% if current_product_id == selected_product_id_string %}
+      {% assign show_block = true %}
+    {% endif %}
+  {% endfor %}
+{% elsif settings.appliesTo == 'collections' %}
+  {% assign show_block = false %}
+  {% for current_collection in product.collections %}
+    {% for selected_collection_id in settings.collectionIds %}
+      {% assign current_collection_id = current_collection.id | append: '' %}
+      {% assign selected_collection_id_string = selected_collection_id | append: '' %}
+      {% if current_collection_id == selected_collection_id_string %}
+        {% assign show_block = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+{% endif %}
+{% if settings.discountType == 'percentage' %}
+  {% assign reward_text = 'You get ' | append: discount_value | append: '% off this product' %}
+{% else %}
+  {% assign reward_text = 'You get ' | append: discount_value | append: ' off this product' %}
+{% endif %}
+{% if preview_mode or offer_ready and show_block %}
+<div id="{{ block_id }}" class="surprise-discount" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px;">
+  <div class="surprise-discount__content">
+    <p class="surprise-discount__message">{{ settings.message | default: 'A little surprise is waiting for you' }}</p>
+    <button class="surprise-discount__button" type="button"{% if settings.discountMode == 'coupon' and settings.couponCode == blank %} disabled{% endif %}>
+      {{ settings.buttonLabel | default: 'Reveal my discount' }}
+    </button>
+    {% if settings.discountMode == 'coupon' %}
+      <button class="surprise-discount__reward surprise-discount__coupon" type="button" hidden aria-live="polite" aria-label="Copy coupon code">
+        <span class="surprise-discount__coupon-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+        </span>
+        <span class="surprise-discount__coupon-copy">
+          <span class="surprise-discount__coupon-label">Your coupon code</span>
+          <strong>{{ settings.couponCode | default: 'YOUR-CODE' | upcase }}</strong>
+        </span>
+        <span class="surprise-discount__copied" aria-live="polite">Copy</span>
+      </button>
+    {% else %}
+      <p class="surprise-discount__reward surprise-discount__automatic" hidden aria-live="polite">{{ reward_text }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  #{{ block_id }} {
+    background: var(--surprise-bg);
+    color: var(--surprise-text);
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  #{{ block_id }} .surprise-discount__content {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  #{{ block_id }} [hidden] {
+    display: none !important;
+  }
+
+  #{{ block_id }} .surprise-discount__message {
+    margin: 0 0 18px;
+    font-size: 1.15rem;
+    line-height: 1.45;
+  }
+
+  #{{ block_id }} .surprise-discount__button {
+    appearance: none;
+    border: 0;
+    border-radius: var(--surprise-radius);
+    background: var(--surprise-button-bg);
+    color: var(--surprise-button-text);
+    cursor: pointer;
+    display: block;
+    font: inherit;
+    font-weight: 700;
+    margin: 0 auto;
+    width: min(100%, 430px);
+    padding: 13px 24px;
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  #{{ block_id }} .surprise-discount__button:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  #{{ block_id }} .surprise-discount__button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  #{{ block_id }} .surprise-discount__code {
+    display: inline-block;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: min(100%, 430px);
+    margin: 22px auto 0;
+    padding: 14px 16px;
+    border: 1.5px dashed #111827;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.32);
+    color: #111827;
+    cursor: pointer;
+    text-align: left;
+    transition: background 160ms ease, transform 160ms ease;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon:hover {
+    background: rgba(255, 255, 255, 0.62);
+    transform: translateY(-1px);
+  }
+
+  #{{ block_id }} .surprise-discount__coupon:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon-icon {
+    display: grid;
+    flex: 0 0 34px;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #111827;
+    color: #ffffff;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon strong {
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  #{{ block_id }} .surprise-discount__copied {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #{{ block_id }} .surprise-discount__coupon.is-copied {
+    border-style: solid;
+  }
+
+  #{{ block_id }} .surprise-discount__automatic {
+    margin: 22px 0 0;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('{{ block_id }}');
+    if (!root || root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const button = root.querySelector('.surprise-discount__button');
+    const rewardElement = root.querySelector('.surprise-discount__reward');
+    const couponElement = root.querySelector('.surprise-discount__coupon');
+    const copiedElement = root.querySelector('.surprise-discount__copied');
+    const mode = {{ settings.discountMode | default: 'coupon' | json }};
+    const code = {{ settings.couponCode | default: '' | json }};
+    const previewMode = {{ preview_mode | json }};
+    if (!button || !rewardElement || (!previewMode && mode === 'coupon' && !code)) return;
+
+    const loadConfetti = () => new Promise((resolve) => {
+      if (typeof window.confetti === 'function') {
+        resolve(window.confetti);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+      script.onload = () => resolve(window.confetti);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      rewardElement.hidden = false;
+      const confetti = await loadConfetti();
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 150, spread: 75, origin: { y: 0.65 } });
+      }
+    });
+
+    if (couponElement && copiedElement && code) {
+      couponElement.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code);
+          copiedElement.textContent = 'Copied';
+          couponElement.classList.add('is-copied');
+          window.setTimeout(() => {
+            copiedElement.textContent = 'Copy';
+            couponElement.classList.remove('is-copied');
+          }, 1800);
+        } catch {
+          copiedElement.textContent = 'Copy manually';
+        }
+      });
+    }
+  })();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Surprise discount",
+  "target": "section"
+}
+{% endschema %}
