@@ -3,6 +3,8 @@
 {% assign preview_mode = request.design_mode %}
 {% assign offer_ready = settings.offerReady | default: false %}
 {% assign discount_value = settings.discountValue | default: '15' | strip %}
+{% assign discount_text = settings.automaticDiscountText | default: 'You get {discount} off this product' %}
+{% assign current_price_text = settings.currentPriceText | default: 'Current product price after discount' %}
 {% assign show_block = false %}
 {% if request.page_type == 'product' %}
   {% assign show_block = true %}
@@ -29,13 +31,25 @@
   {% endfor %}
 {% endif %}
 {% if settings.discountType == 'percentage' %}
-  {% assign reward_text = 'You get ' | append: discount_value | append: '% off this product' %}
+  {% assign reward_value = discount_value | append: '%' %}
 {% else %}
-  {% assign reward_text = 'You get ' | append: discount_value | append: ' off this product' %}
+  {% assign reward_value = discount_value %}
+{% endif %}
+{% assign reward_text = discount_text | replace: '{discount}', reward_value %}
+{% assign current_variant = product.selected_or_first_available_variant %}
+{% assign original_price = current_variant.price %}
+{% if settings.discountType == 'percentage' %}
+  {% assign discount_amount = original_price | times: discount_value | divided_by: 100 %}
+{% else %}
+  {% assign discount_amount = discount_value | times: 100 %}
+{% endif %}
+{% assign discounted_price = original_price | minus: discount_amount %}
+{% if discounted_price < 0 %}
+  {% assign discounted_price = 0 %}
 {% endif %}
 {% if request.page_type == 'product' %}
   {% if preview_mode or offer_ready and show_block %}
-<div id="{{ block_id }}" class="surprise-discount" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px;">
+<div id="{{ block_id }}" class="surprise-discount" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px; --surprise-container-radius: {{ settings.containerRadius | default: 14 }}px; --surprise-message-size-desktop: {{ settings.messageSizeDesktop | default: 18 }}px; --surprise-message-size-mobile: {{ settings.messageSizeMobile | default: 16 }}px;">
   <div class="surprise-discount__content">
     <p class="surprise-discount__message">{{ settings.message | default: 'A little surprise is waiting for you' }}</p>
     <button class="surprise-discount__button" type="button"{% if settings.discountMode == 'coupon' and settings.couponCode == blank %} disabled{% endif %}>
@@ -55,6 +69,10 @@
     {% else %}
       <p class="surprise-discount__reward surprise-discount__automatic" hidden aria-live="polite">{{ reward_text }}</p>
     {% endif %}
+    <p class="surprise-discount__price" hidden aria-live="polite">
+      {{ current_price_text }}: <strong>{{ discounted_price | money }}</strong>
+      <span class="surprise-discount__original-price">{{ original_price | money }}</span>
+    </p>
   </div>
 </div>
 
@@ -62,7 +80,7 @@
   #{{ block_id }} {
     background: var(--surprise-bg);
     color: var(--surprise-text);
-    border-radius: 14px;
+    border-radius: var(--surprise-container-radius);
     padding: 28px;
     text-align: center;
   }
@@ -78,8 +96,14 @@
 
   #{{ block_id }} .surprise-discount__message {
     margin: 0 0 18px;
-    font-size: 1.15rem;
+    font-size: var(--surprise-message-size-desktop);
     line-height: 1.45;
+  }
+
+  @media (max-width: 749px) {
+    #{{ block_id }} .surprise-discount__message {
+      font-size: var(--surprise-message-size-mobile);
+    }
   }
 
   #{{ block_id }} .surprise-discount__button {
@@ -193,6 +217,17 @@
     margin: 22px 0 0;
     font-weight: 600;
   }
+
+  #{{ block_id }} .surprise-discount__price {
+    margin: 14px 0 0;
+    font-weight: 600;
+  }
+
+  #{{ block_id }} .surprise-discount__original-price {
+    margin-left: 8px;
+    opacity: 0.65;
+    text-decoration: line-through;
+  }
 </style>
 
 <script>
@@ -203,6 +238,7 @@
 
     const button = root.querySelector('.surprise-discount__button');
     const rewardElement = root.querySelector('.surprise-discount__reward');
+    const priceElement = root.querySelector('.surprise-discount__price');
     const couponElement = root.querySelector('.surprise-discount__coupon');
     const copiedElement = root.querySelector('.surprise-discount__copied');
     const mode = {{ settings.discountMode | default: 'coupon' | json }};
@@ -225,6 +261,7 @@
     button.addEventListener('click', async () => {
       button.disabled = true;
       rewardElement.hidden = false;
+      if (priceElement) priceElement.hidden = false;
       const confetti = await loadConfetti();
       if (typeof confetti === 'function') {
         confetti({ particleCount: 150, spread: 75, origin: { y: 0.65 } });
