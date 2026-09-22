@@ -23,6 +23,7 @@ export default function App() {
           <s-link href="/app/offers">Offers</s-link>
           <s-link href="/app/analytics">Analytics</s-link>
           <s-link href="/app/settings">Settings</s-link>
+          <s-link href="/app/services">Services</s-link>
         </s-app-nav>
         <div style={{ padding: "0 1.5rem 1.5rem" }}>
           <Outlet />

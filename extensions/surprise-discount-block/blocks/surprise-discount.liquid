@@ -70,7 +70,8 @@
       <p class="surprise-discount__reward surprise-discount__automatic" hidden aria-live="polite">{{ reward_text }}</p>
     {% endif %}
     <p class="surprise-discount__price" hidden aria-live="polite">
-      {{ current_price_text }}: <strong>{{ discounted_price | money }}</strong>
+      <span class="surprise-discount__price-label">{{ current_price_text }}</span>:
+      <strong class="surprise-discount__discounted-price">{{ discounted_price | money }}</strong>
       <span class="surprise-discount__original-price">{{ original_price | money }}</span>
     </p>
   </div>
@@ -239,10 +240,16 @@
     const button = root.querySelector('.surprise-discount__button');
     const rewardElement = root.querySelector('.surprise-discount__reward');
     const priceElement = root.querySelector('.surprise-discount__price');
+    const discountedPriceElement = root.querySelector('.surprise-discount__discounted-price');
+    const originalPriceElement = root.querySelector('.surprise-discount__original-price');
     const couponElement = root.querySelector('.surprise-discount__coupon');
     const copiedElement = root.querySelector('.surprise-discount__copied');
     const mode = {{ settings.discountMode | default: 'coupon' | json }};
     const code = {{ settings.couponCode | default: '' | json }};
+    const discountType = {{ settings.discountType | default: 'percentage' | json }};
+    const discountValue = Number({{ discount_value | json }}) || 0;
+    const currency = {{ shop.currency | json }};
+    const productVariants = {{ product.variants | json }};
     const previewMode = {{ preview_mode | json }};
     if (!button || !rewardElement || (!previewMode && mode === 'coupon' && !code)) return;
 
@@ -257,6 +264,57 @@
       script.onerror = () => resolve(null);
       document.head.appendChild(script);
     });
+
+    const formatMoney = (cents) => new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+    }).format(Math.max(0, cents) / 100);
+
+    const updateVariantPrice = (price) => {
+      if (!discountedPriceElement || !originalPriceElement || typeof price !== 'number' || !Number.isFinite(price)) return;
+      const discountCents = discountType === 'percentage'
+        ? price * discountValue / 100
+        : discountValue * 100;
+      discountedPriceElement.textContent = formatMoney(price - discountCents);
+      originalPriceElement.textContent = formatMoney(price);
+    };
+
+    const resetReveal = () => {
+      rewardElement.hidden = true;
+      if (priceElement) priceElement.hidden = true;
+      button.disabled = !previewMode && mode === 'coupon' && !code;
+      if (couponElement && copiedElement) {
+        copiedElement.textContent = 'Copy';
+        couponElement.classList.remove('is-copied');
+      }
+    };
+
+    const updateFromSelectedVariant = () => {
+      const variantInput = document.querySelector('form[action*="/cart/add"] [name="id"], [name="id"]');
+      const variantId = variantInput && variantInput.value;
+      const variant = productVariants.find((item) => String(item.id) === String(variantId));
+      if (variant && variant.price !== undefined) {
+        updateVariantPrice(Number(variant.price));
+        resetReveal();
+      }
+    };
+
+    const handleVariantChange = (event) => {
+      const variant = event.detail && event.detail.variant;
+      if (!variant || variant.price === undefined) return;
+      const rawPrice = typeof variant.price === 'string' ? Number(variant.price) * 100 : Number(variant.price);
+      updateVariantPrice(rawPrice);
+      resetReveal();
+    };
+
+    document.addEventListener('variant:change', handleVariantChange);
+    document.addEventListener('shopify:variant:change', handleVariantChange);
+    document.addEventListener('change', (event) => {
+      const target = event.target;
+      const productForm = target && target.closest('form[action*="/cart/add"]');
+      if (!productForm) return;
+      window.setTimeout(updateFromSelectedVariant, target.name === 'id' ? 0 : 50);
+    }, true);
 
     button.addEventListener('click', async () => {
       button.disabled = true;

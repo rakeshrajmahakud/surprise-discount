@@ -315,15 +315,6 @@ export default function Settings() {
             <div style={{ background: "#f5f5f5", borderRadius: 16, padding: "1.25rem", margin: "1rem" }}>
               <div style={previewStyles}>
                 <p style={{ margin: "0 0 18px", fontSize: `${formValues.messageSizeDesktop}px`, lineHeight: 1.45 }}>{formValues.blockMessage}</p>
-                {formValues.discountMode === "automatic" && (
-                  <p style={{ margin: "0 0 18px", fontSize: `${formValues.messageSizeDesktop}px`, lineHeight: 1.45, fontWeight: 600 }}>
-                    {previewRewardText}
-                  </p>
-                )}
-                <p style={{ margin: "0 0 18px", fontSize: `${formValues.messageSizeDesktop}px`, lineHeight: 1.45, fontWeight: 600 }}>
-                  {formValues.currentPriceText}: <strong>${previewDiscountedPrice.toFixed(2)}</strong>{" "}
-                  <span style={{ opacity: 0.65, textDecoration: "line-through", fontWeight: 400 }}>${previewOriginalPrice.toFixed(2)}</span>
-                </p>
                 <button
                   type="button"
                   style={{
@@ -343,6 +334,15 @@ export default function Settings() {
                 >
                   {formValues.buttonLabel}
                 </button>
+                {formValues.discountMode === "automatic" && (
+                  <p style={{ margin: "18px 0 0", fontSize: `${formValues.messageSizeDesktop}px`, lineHeight: 1.45, fontWeight: 600 }}>
+                    {previewRewardText}
+                  </p>
+                )}
+                <p style={{ margin: "14px 0 0", fontSize: `${formValues.messageSizeDesktop}px`, lineHeight: 1.45, fontWeight: 600 }}>
+                  {formValues.currentPriceText}: <strong>${previewDiscountedPrice.toFixed(2)}</strong>{" "}
+                  <span style={{ opacity: 0.65, textDecoration: "line-through", fontWeight: 400 }}>${previewOriginalPrice.toFixed(2)}</span>
+                </p>
               </div>
             </div>
             <div style={{ padding: "0 1rem 1rem" }}>

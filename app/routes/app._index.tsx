@@ -49,7 +49,7 @@ export default function HomePage() {
                 </Text>
               </div>
               <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-                <Button url="/app/offers" variant="primary">Create offer</Button>
+                <Button onClick={() => navigate("/app/offers")} variant="primary">Create offer</Button>
                 <Button url="https://shopify.dev/docs/apps/build/online-store/theme-app-extensions" external>Theme app docs</Button>
               </div>
             </Box>
@@ -117,6 +117,55 @@ export default function HomePage() {
               </div>
             </Box>
           </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <div
+            style={{
+              background: "linear-gradient(135deg, #29205a 0%, #403080 100%)",
+              borderRadius: "1rem",
+              color: "#ffffff",
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) 8rem",
+              gap: "2rem",
+              padding: "2rem 1.5rem",
+            }}
+          >
+            <div style={{ maxWidth: "34rem" }}>
+              <Text as="h2" variant="headingXl">
+                Want your storefront redesigned to match?
+              </Text>
+              <div style={{ marginTop: "1rem" }}>
+                <Text as="p" variant="bodyLg">
+                  We build the themes and custom apps this widget lives in. Free
+                  20-minute audit of your product pages.
+                </Text>
+              </div>
+              <div style={{ marginTop: "1.5rem" }}>
+                <Button onClick={() => navigate("/app/services")} variant="secondary">
+                  See services
+                </Button>
+              </div>
+            </div>
+            <div
+              aria-hidden="true"
+              style={{
+                alignItems: "center",
+                alignSelf: "center",
+                background: "rgba(255, 255, 255, 0.12)",
+                border: "1px solid rgba(255, 255, 255, 0.22)",
+                borderRadius: "2rem",
+                display: "flex",
+                fontSize: "4rem",
+                height: "8rem",
+                justifyContent: "center",
+                lineHeight: 1,
+                width: "8rem",
+              }}
+            >
+              ✦
+            </div>
+          </div>
         </Layout.Section>
       </Layout>
     </Page>
