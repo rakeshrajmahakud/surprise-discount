@@ -1,4 +1,5 @@
-import { Form, useLoaderData, useNavigation } from "react-router";
+import { useEffect, useState } from "react";
+import { Form, useLoaderData, useNavigate, useNavigation } from "react-router";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { LoaderFunctionArgs } from "react-router";
 import { Badge, Button, Card, Layout, Page, Select, Text } from "@shopify/polaris";
@@ -31,8 +32,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function AnalyticsPage() {
   const { analytics, range } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
   const navigation = useNavigation();
+  const [selectedRange, setSelectedRange] = useState(String(range));
   const loading = navigation.state === "loading";
+  useEffect(() => {
+    setSelectedRange(String(range));
+  }, [range]);
   const chartData = analytics.dailyRedemptions.map((row) => ({
     ...row,
     label: formatShortDate(row.date),
@@ -43,6 +49,7 @@ export default function AnalyticsPage() {
     <Page
       title="Analytics"
       subtitle="Track redemptions, conversion impact, and top-performing offers."
+      backAction={{ content: "Dashboard", onAction: () => navigate("/app") }}
       primaryAction={
         <Form method="get">
           <div style={{ display: "flex", alignItems: "end", gap: "0.75rem" }}>
@@ -50,7 +57,8 @@ export default function AnalyticsPage() {
               <Select
                 label="Date range"
                 name="range"
-                value={String(range)}
+                value={selectedRange}
+                onChange={setSelectedRange}
                 options={[
                   { label: "Last 7 days", value: "7" },
                   { label: "Last 30 days", value: "30" },

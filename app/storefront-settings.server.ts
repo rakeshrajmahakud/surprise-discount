@@ -20,6 +20,7 @@ export const defaultBlockSettings = {
   messageSizeMobile: 16,
   automaticDiscountText: "You get {discount} off this product",
   currentPriceText: "Current product price after discount",
+  showDelaySeconds: 0,
   appliesTo: "all",
   productIds: [] as string[],
   collectionIds: [] as string[],

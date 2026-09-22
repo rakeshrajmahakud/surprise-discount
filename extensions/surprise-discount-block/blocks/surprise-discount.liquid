@@ -5,6 +5,9 @@
 {% assign discount_value = settings.discountValue | default: '15' | strip %}
 {% assign discount_text = settings.automaticDiscountText | default: 'You get {discount} off this product' %}
 {% assign current_price_text = settings.currentPriceText | default: 'Current product price after discount' %}
+{% assign show_delay_seconds = settings.showDelaySeconds | default: 0 | plus: 0 %}
+{% if show_delay_seconds < 0 %}{% assign show_delay_seconds = 0 %}{% endif %}
+{% if show_delay_seconds > 60 %}{% assign show_delay_seconds = 60 %}{% endif %}
 {% assign show_block = false %}
 {% if request.page_type == 'product' %}
   {% assign show_block = true %}
@@ -49,7 +52,7 @@
 {% endif %}
 {% if request.page_type == 'product' %}
   {% if preview_mode or offer_ready and show_block %}
-<div id="{{ block_id }}" class="surprise-discount" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px; --surprise-container-radius: {{ settings.containerRadius | default: 14 }}px; --surprise-message-size-desktop: {{ settings.messageSizeDesktop | default: 18 }}px; --surprise-message-size-mobile: {{ settings.messageSizeMobile | default: 16 }}px;">
+<div id="{{ block_id }}" class="surprise-discount{% if show_delay_seconds > 0 and preview_mode == false %} surprise-discount--delayed{% endif %}" data-show-delay="{{ show_delay_seconds }}" style="--surprise-bg: {{ settings.backgroundColor | default: '#fff4d6' }}; --surprise-text: {{ settings.textColor | default: '#1f2933' }}; --surprise-button-bg: {{ settings.buttonColor | default: '#e85d04' }}; --surprise-button-text: {{ settings.buttonTextColor | default: '#ffffff' }}; --surprise-radius: {{ settings.buttonRadius | default: 8 }}px; --surprise-container-radius: {{ settings.containerRadius | default: 14 }}px; --surprise-message-size-desktop: {{ settings.messageSizeDesktop | default: 18 }}px; --surprise-message-size-mobile: {{ settings.messageSizeMobile | default: 16 }}px;">
   <div class="surprise-discount__content">
     <p class="surprise-discount__message">{{ settings.message | default: 'A little surprise is waiting for you' }}</p>
     <button class="surprise-discount__button" type="button"{% if settings.discountMode == 'coupon' and settings.couponCode == blank %} disabled{% endif %}>
@@ -84,6 +87,14 @@
     border-radius: var(--surprise-container-radius);
     padding: 28px;
     text-align: center;
+  }
+
+  #{{ block_id }}.surprise-discount--delayed {
+    visibility: hidden;
+  }
+
+  #{{ block_id }}.surprise-discount--visible {
+    visibility: visible;
   }
 
   #{{ block_id }} .surprise-discount__content {
@@ -236,6 +247,10 @@
     const root = document.getElementById('{{ block_id }}');
     if (!root || root.dataset.initialized === 'true') return;
     root.dataset.initialized = 'true';
+    const showDelaySeconds = Number(root.dataset.showDelay || 0);
+    if (root.classList.contains('surprise-discount--delayed')) {
+      window.setTimeout(() => root.classList.add('surprise-discount--visible'), showDelaySeconds * 1000);
+    }
 
     const button = root.querySelector('.surprise-discount__button');
     const rewardElement = root.querySelector('.surprise-discount__reward');
@@ -252,18 +267,6 @@
     const productVariants = {{ product.variants | json }};
     const previewMode = {{ preview_mode | json }};
     if (!button || !rewardElement || (!previewMode && mode === 'coupon' && !code)) return;
-
-    const loadConfetti = () => new Promise((resolve) => {
-      if (typeof window.confetti === 'function') {
-        resolve(window.confetti);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
-      script.onload = () => resolve(window.confetti);
-      script.onerror = () => resolve(null);
-      document.head.appendChild(script);
-    });
 
     const formatMoney = (cents) => new Intl.NumberFormat(undefined, {
       style: 'currency',
@@ -320,10 +323,6 @@
       button.disabled = true;
       rewardElement.hidden = false;
       if (priceElement) priceElement.hidden = false;
-      const confetti = await loadConfetti();
-      if (typeof confetti === 'function') {
-        confetti({ particleCount: 150, spread: 75, origin: { y: 0.65 } });
-      }
     });
 
     if (couponElement && copiedElement && code) {

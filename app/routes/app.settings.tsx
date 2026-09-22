@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Form, useActionData, useLoaderData, useNavigate, useNavigation } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Button, Card, FormLayout, Layout, Page, Select, Text } from "@shopify/polaris";
@@ -38,6 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
     messageSizeMobile: Math.min(32, Math.max(10, Number(form.get("messageSizeMobile")) || defaultBlockSettings.messageSizeMobile)),
     automaticDiscountText: String(form.get("automaticDiscountText") ?? defaultBlockSettings.automaticDiscountText).trim() || defaultBlockSettings.automaticDiscountText,
     currentPriceText: String(form.get("currentPriceText") ?? defaultBlockSettings.currentPriceText).trim() || defaultBlockSettings.currentPriceText,
+    showDelaySeconds: Math.min(60, Math.max(0, Number(form.get("showDelaySeconds")) || 0)),
   };
   try {
     await syncOfferToBlock(admin, settings, selectedOffer);
@@ -49,6 +50,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Settings() {
   const { blockSettings, offers } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
   const result = useActionData<typeof action>();
   const navigation = useNavigation();
   const shopify = useAppBridge() as unknown as {
@@ -70,6 +72,7 @@ export default function Settings() {
     messageSizeMobile: blockSettings.messageSizeMobile,
     automaticDiscountText: blockSettings.automaticDiscountText,
     currentPriceText: blockSettings.currentPriceText,
+    showDelaySeconds: blockSettings.showDelaySeconds,
     discountMode: blockSettings.discountMode,
     discountType: blockSettings.discountType,
     discountValue: blockSettings.discountValue,
@@ -90,6 +93,7 @@ export default function Settings() {
       messageSizeMobile: blockSettings.messageSizeMobile,
       automaticDiscountText: blockSettings.automaticDiscountText,
       currentPriceText: blockSettings.currentPriceText,
+      showDelaySeconds: blockSettings.showDelaySeconds,
       discountMode: blockSettings.discountMode,
       discountType: blockSettings.discountType,
       discountValue: blockSettings.discountValue,
@@ -128,7 +132,11 @@ export default function Settings() {
   const previewDiscountedPrice = Math.max(0, previewOriginalPrice - previewDiscount);
 
   return (
-    <Page title="Settings" subtitle="Customize how the storefront discount block appears to shoppers.">
+    <Page
+      title="Settings"
+      subtitle="Customize how the storefront discount block appears to shoppers."
+      backAction={{ content: "Dashboard", onAction: () => navigate("/app") }}
+    >
       <Layout>
         <Layout.Section>
           <Card>
@@ -148,6 +156,9 @@ export default function Settings() {
                   />
                   <Text as="p" tone="subdued">
                     This decides which discount or coupon is shown in the block. It is important because it controls the reward, coupon code, and product targeting. You can leave it empty while styling only, but the block will not show a live offer until one is selected.
+                  </Text>
+                  <Text as="p" tone="subdued">
+                    If another eligible automatic discount already applies to the same product, Shopify decides which discount or combination of discounts is applied at checkout according to its discount eligibility and combining rules. The offer selected here controls what this app displays in the storefront block.
                   </Text>
 
                   <label style={{ display: "grid", gap: "0.5rem" }}>
@@ -194,6 +205,23 @@ export default function Settings() {
                     />
                     <Text as="span" tone="subdued">
                       This text only works for automatic discounts. It does not apply to discount code offers. Use {'{discount}'} to insert the actual offer value automatically. Example: “You get {'{discount}'} off this product”.
+                    </Text>
+                  </label>
+
+                  <label style={{ display: "grid", gap: "0.5rem" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280" }}>Show widget after (seconds)</span>
+                    <input
+                      type="number"
+                      name="showDelaySeconds"
+                      min={0}
+                      max={60}
+                      step={1}
+                      value={formValues.showDelaySeconds}
+                      onChange={(event) => updateValue("showDelaySeconds", Math.min(60, Math.max(0, Number(event.target.value) || 0)))}
+                      style={{ width: "100%", minHeight: 40, borderRadius: 8, border: "1px solid #d1d5db", padding: "0.625rem 0.75rem" }}
+                    />
+                    <Text as="span" tone="subdued">
+                      Choose 0 for immediate display, or up to 60 seconds (1 minute) after the product page loads.
                     </Text>
                   </label>
 
