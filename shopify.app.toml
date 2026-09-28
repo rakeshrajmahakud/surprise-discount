@@ -1,7 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "8c0e6495560524a7efeac1af9ff10065"
-application_url = "https://example.com"
+# application_url = "https://example.com"
+application_url = "https://surprise-discount.hesevens.com"
 embedded = true
 name = "Surprise discount"
 
@@ -34,7 +35,8 @@ compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact
   topics = [ "orders/paid" ]
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+# redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://surprise-discount.hesevens.com/api/auth" ]
 
 [build]
 automatically_update_urls_on_dev = true
