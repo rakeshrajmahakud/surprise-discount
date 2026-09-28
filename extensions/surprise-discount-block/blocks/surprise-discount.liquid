@@ -292,6 +292,77 @@
       }
     };
 
+    const burstConfetti = () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const bounds = button.getBoundingClientRect();
+      const pixelRatio = window.devicePixelRatio || 1;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      canvas.width = width * pixelRatio;
+      canvas.height = height * pixelRatio;
+      canvas.setAttribute('aria-hidden', 'true');
+      Object.assign(canvas.style, {
+        position: 'fixed',
+        inset: '0',
+        width: `${width}px`,
+        height: `${height}px`,
+        pointerEvents: 'none',
+        zIndex: '2147483647',
+      });
+      document.body.appendChild(canvas);
+      context.scale(pixelRatio, pixelRatio);
+
+      const colors = ['#e85d04', '#ffba08', '#2a9d8f', '#4361ee', '#ef476f'];
+      const originX = bounds.left + bounds.width / 2;
+      const originY = bounds.top + bounds.height / 2;
+      const particles = Array.from({ length: 90 }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 7;
+        return {
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3,
+          size: 4 + Math.random() * 5,
+          rotation: Math.random() * Math.PI,
+          spin: (Math.random() - 0.5) * 0.24,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        };
+      });
+      const startTime = performance.now();
+
+      const drawFrame = (time) => {
+        const elapsed = time - startTime;
+        if (elapsed >= 1400) {
+          canvas.remove();
+          return;
+        }
+
+        context.clearRect(0, 0, width, height);
+        context.globalAlpha = Math.max(0, 1 - elapsed / 1400);
+        particles.forEach((particle) => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vy += 0.16;
+          particle.rotation += particle.spin;
+          context.save();
+          context.translate(particle.x, particle.y);
+          context.rotate(particle.rotation);
+          context.fillStyle = particle.color;
+          context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size * 0.65);
+          context.restore();
+        });
+        window.requestAnimationFrame(drawFrame);
+      };
+
+      window.requestAnimationFrame(drawFrame);
+    };
+
     const updateFromSelectedVariant = () => {
       const variantInput = document.querySelector('form[action*="/cart/add"] [name="id"], [name="id"]');
       const variantId = variantInput && variantInput.value;
@@ -323,6 +394,7 @@
       button.disabled = true;
       rewardElement.hidden = false;
       if (priceElement) priceElement.hidden = false;
+      burstConfetti();
     });
 
     if (couponElement && copiedElement && code) {

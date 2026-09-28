@@ -1,1 +1,0 @@
-ALTER TABLE "Offer" ADD COLUMN "discountMethod" TEXT NOT NULL DEFAULT 'coupon';
