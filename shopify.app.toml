@@ -20,7 +20,7 @@ description = "Configuration managed from the Surprise Discount admin dashboard"
 
 [webhooks]
 api_version = "2026-07"
-compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+# compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/uninstalled"
@@ -33,6 +33,19 @@ compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact
   [[webhooks.subscriptions]]
   uri = "/webhooks/orders/paid"
   topics = [ "orders/paid" ]
+
+  # Mandatory Shopify compliance webhooks
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = ["customers/data_request"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = ["customers/redact"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = ["shop/redact"]
 
 [auth]
 # redirect_urls = [ "https://example.com/api/auth" ]
